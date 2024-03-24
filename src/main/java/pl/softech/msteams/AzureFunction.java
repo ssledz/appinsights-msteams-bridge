@@ -49,6 +49,7 @@ public class AzureFunction {
                     authLevel = AuthorizationLevel.ANONYMOUS)
             HttpRequestMessage<Optional<String>> request,
             final ExecutionContext context) {
+        context.getLogger().log(Level.FINEST, "Request:\n" + request.getBody().orElseGet(() -> "{}"));
         return request
                 .getBody()
                 .map(body -> Try.of(() -> mapper.readValue(body, AppInsightsAlertMessage.class)).toEither())
@@ -76,6 +77,7 @@ public class AzureFunction {
                     .build();
             var clResponse = httpClient.send(clientReq, HttpResponse.BodyHandlers.ofString());
             var response = new AzureFunctionResponse(message, clResponse.body());
+            context.getLogger().log(Level.FINEST, "Teams Response:\n" + response.response());
             return request.createResponseBuilder(HttpStatus.OK).body(mapper.writeValueAsString(response)).build();
         } catch (Exception e) {
             context.getLogger().log(Level.SEVERE, "Error during serving request", e);
