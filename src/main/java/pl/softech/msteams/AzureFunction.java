@@ -15,6 +15,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -130,13 +131,13 @@ public class AzureFunction {
 
     private static String getCat(String cond) {
         return selectFirstOption("https://adaptivecards.io/content/cats/3.png",
-                () -> cond == "Fired" ? Optional.of("https://adaptivecards.io/content/cats/1.png") : Optional.empty()
+                () -> Objects.equals(cond, "Fired") ? Optional.of("https://adaptivecards.io/content/cats/1.png") : Optional.empty()
         );
     }
 
     private static String getColour(String cond) {
         return selectFirstOption("green",
-                () -> cond == "Fired" ? Optional.of("red") : Optional.empty()
+                () -> Objects.equals(cond, "Fired") ? Optional.of("red") : Optional.empty()
         );
     }
 
