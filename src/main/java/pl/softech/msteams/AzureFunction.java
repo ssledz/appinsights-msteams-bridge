@@ -14,8 +14,10 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.stream.Stream;
 
@@ -105,11 +107,41 @@ public class AzureFunction {
                         new MSTeamsMessageCard.MessageSection(
                                 message.data().essentials().alertRule(),
                                 message.data().essentials().description(),
-                                String.format("Alert %s has fired", message.data().essentials().alertRule()),
-                                "https://adaptivecards.io/content/cats/3.png",
+                                String.format(
+                                        "Alert <em>%s</em> has been %s",
+                                        message.data().essentials().alertRule(),
+                                        strong(
+                                                message.data().essentials().monitorCondition(),
+                                                getColour(message.data().essentials().monitorCondition())
+                                        )
+                                ),
+                                getCat(message.data().essentials().monitorCondition()),
                                 true,
                                 facts
                         )});
+    }
+
+    private static String selectFirstOption(String defaultValue, Supplier<Optional<String>>... opts) {
+        return Arrays.stream(opts)
+                .flatMap(m -> m.get().stream())
+                .findFirst()
+                .orElseGet(() -> defaultValue);
+    }
+
+    private static String getCat(String cond) {
+        return selectFirstOption("https://adaptivecards.io/content/cats/3.png",
+                () -> cond == "Fired" ? Optional.of("https://adaptivecards.io/content/cats/1.png") : Optional.empty()
+        );
+    }
+
+    private static String getColour(String cond) {
+        return selectFirstOption("green",
+                () -> cond == "Fired" ? Optional.of("red") : Optional.empty()
+        );
+    }
+
+    private static String strong(String txt, String color) {
+        return String.format("<strong style=\"color: %s\">%s</strong>", color, txt);
     }
 
     private static <T> Stream<MSTeamsMessageCard.MessageFact> makeFact(Optional<T> value, String label, Function<T, String> formatter) {
